@@ -1,0 +1,5 @@
+# ESP-IDF build
+build/
+
+# ESP-IDF hardware
+esp-idf

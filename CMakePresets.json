@@ -1,0 +1,49 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "IDF_TARGET": "esp32s3"
+      }
+    },
+    {
+      "name": "esp32s3-debug",
+      "displayName": "ESP32-S3 Debug",
+      "description": "Compilation avec symboles de débogage pour JTAG",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "esp32s3-release",
+      "displayName": "ESP32-S3 Release",
+      "description": "Compilation optimisée en taille et vitesse (-O2)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "debug",
+      "displayName": "Build Debug",
+      "configurePreset": "esp32s3-debug"
+    },
+    {
+      "name": "release",
+      "displayName": "Build Release",
+      "configurePreset": "esp32s3-release"
+    }
+  ]
+}
