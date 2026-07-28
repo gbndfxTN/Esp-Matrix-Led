@@ -1,4 +1,4 @@
 idf_component_register(
-    SRCS source/drivers.c source/shared_data.c
+    SRCS source/interpreter_.c
     INCLUDE_DIRS include
 )

@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/optimizations.cmake")
+if(NOT DEFINED ENV{IDF_PATH})
+    set(ENV{IDF_PATH} "${CMAKE_CURRENT_LIST_DIR}/esp-idf")
+endif()
 
 set(EXTRA_COMPONENT_DIRS
     ${CMAKE_CURRENT_LIST_DIR}/Drivers
-    ${CMAKE_CURRENT_LIST_DIR}/Interpreter/core0_wifi_bt
-    ${CMAKE_CURRENT_LIST_DIR}/Interpreter/core1_led_matrix
-    ${CMAKE_CURRENT_LIST_DIR}/Application/core0_wifi_bt
-    ${CMAKE_CURRENT_LIST_DIR}/Application/core1_led_matrix
+    ${CMAKE_CURRENT_LIST_DIR}/Interpreter/NetworkHandler
+    ${CMAKE_CURRENT_LIST_DIR}/Interpreter/Hub75Hal
+    ${CMAKE_CURRENT_LIST_DIR}/Application/Network
+    ${CMAKE_CURRENT_LIST_DIR}/Application/Hub75
 )
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
