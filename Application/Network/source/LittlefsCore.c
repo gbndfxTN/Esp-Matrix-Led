@@ -1,5 +1,8 @@
 #include "LittlefsCore.h"
-
+#include "esp_littlefs.h"
+#include "esp_log.h"
+#include "GifPsram.h"
+#include "stdio.h"
 
 static const char *TAG = "Littlefs";
 
@@ -57,9 +60,9 @@ uint8_t* load_file(const char *filepath, size_t *out_size) {
         return NULL; 
     }
 
-    uint8_t *buffer = (uint8_t *)heap_caps_malloc(size, MALLOC_CAP_SPIRAM);
+    mallocGifPsram(size);
+    uint8_t *buffer = getGifPsram();
     if (buffer == NULL) {
-        ESP_LOGE(TAG, "Échec d'allocation de %zu octets en PSRAM", size);
         fclose(f);
         return NULL;
     }
@@ -69,7 +72,7 @@ uint8_t* load_file(const char *filepath, size_t *out_size) {
 
     if (bytes_read != size) {
         ESP_LOGE(TAG, "Erreur lors de la lecture (%zu/%zu octets lus)", bytes_read, size);
-        heap_caps_free(buffer);
+        freeGifPsram();
         return NULL;
     }
 

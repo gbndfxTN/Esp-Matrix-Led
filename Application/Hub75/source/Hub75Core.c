@@ -1,5 +1,4 @@
-#include "app_core1.h"
-#include "shared_data.h"
+#include "Hub75Core.h"
 #include "esp_log.h"
 
 void app_core1_init(void)
