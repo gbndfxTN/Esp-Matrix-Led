@@ -14,6 +14,39 @@
                 "isDefault": true
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Flash ESP32-S3",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ${workspaceFolder}/esp-idf/export.sh && idf.py flash"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Monitor ESP32-S3",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ${workspaceFolder}/esp-idf/export.sh && idf.py monitor"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "OTA BLE Flash",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "source ${workspaceFolder}/esp-idf/export.sh && idf.py build && pip install -r ${workspaceFolder}/scripts/requirements.txt -q && python ${workspaceFolder}/scripts/ble_ota.py ${workspaceFolder}/build/esp_matrix_led.bin"
+            ],
+            "group": "build",
+            "problemMatcher": []
         }
     ]
 }

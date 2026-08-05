@@ -6,17 +6,11 @@
 #include "esp_heap_caps.h"
 #include <string.h>
 
-
 static const char *TAG = "GIFCORE";
-
-#define MATRIX_WIDTH  128
-#define MATRIX_HEIGHT 64
-
 
 static void scale_rgb24_nearest(const uint8_t *src, int src_w, int src_h, uint8_t *dst, int dst_w, int dst_h) {
     for (int y = 0; y < dst_h; y++) {
         int src_y = (y * src_h) / dst_h;
-        
         for (int x = 0; x < dst_w; x++) {
             int src_x = (x * src_w) / dst_w;
             
@@ -29,7 +23,6 @@ static void scale_rgb24_nearest(const uint8_t *src, int src_w, int src_h, uint8_
         }
     }
 }
-
 
 #pragma pack(push, 1)
 typedef struct {
@@ -54,7 +47,9 @@ void download_gif(const char *url, const char *filepath, size_t *out_size) {
     }
 
     int num_pixels = MATRIX_WIDTH * MATRIX_HEIGHT;
-    size_t frame_bytes = sizeof(uint16_t) + (num_pixels * 8);
+
+    size_t hub75_words_per_frame = SCAN_RATE * 8 * (MATRIX_WIDTH + 2);
+    size_t frame_bytes = sizeof(uint16_t) + (hub75_words_per_frame * sizeof(uint16_t));
 
     size_t bin_size = sizeof(BinHeader);
     uint8_t *bin_buffer = (uint8_t *)malloc(bin_size);
@@ -108,17 +103,44 @@ void download_gif(const char *url, const char *filepath, size_t *out_size) {
         memcpy(&bin_buffer[write_offset], &delay_ms, sizeof(delay_ms));
         write_offset += sizeof(delay_ms);
 
-        uint8_t *bitplanes_ptr = &bin_buffer[write_offset];
-        for (int p = 0; p < num_pixels; p++) {
-            uint8_t r = rgb_scaled[p * 3 + 0];
-            uint8_t g = rgb_scaled[p * 3 + 1];
-            uint8_t b = rgb_scaled[p * 3 + 2];
+        uint16_t *dma_words = (uint16_t *)&bin_buffer[write_offset];
+        uint32_t w_idx = 0;
 
-            for (int bit = 0; bit < 8; bit++) {
-                uint8_t r_bit = (r >> bit) & 0x01;
-                uint8_t g_bit = (g >> bit) & 0x01;
-                uint8_t b_bit = (b >> bit) & 0x01;
-                bitplanes_ptr[(bit * num_pixels) + p] = (r_bit << 0) | (g_bit << 1) | (b_bit << 2);
+        for (uint8_t row = 0; row < SCAN_RATE; row++) {
+            uint16_t addr_mask = 0;
+            if (row & 0x01) addr_mask |= BIT_A;
+            if (row & 0x02) addr_mask |= BIT_B;
+            if (row & 0x04) addr_mask |= BIT_C;
+            if (row & 0x08) addr_mask |= BIT_D;
+            if (row & 0x10) addr_mask |= BIT_E;
+
+            for (uint8_t bit = 0; bit < 8; bit++) {
+                for (int x = 0; x < MATRIX_WIDTH; x++) {
+                    int idx_top = (row * MATRIX_WIDTH + x) * 3;
+                    int idx_bot = ((row + SCAN_RATE) * MATRIX_WIDTH + x) * 3;
+
+                    uint8_t r1 = (rgb_scaled[idx_top + 0] >> bit) & 0x01;
+                    uint8_t g1 = (rgb_scaled[idx_top + 1] >> bit) & 0x01;
+                    uint8_t b1 = (rgb_scaled[idx_top + 2] >> bit) & 0x01;
+
+                    uint8_t r2 = (rgb_scaled[idx_bot + 0] >> bit) & 0x01;
+                    uint8_t g2 = (rgb_scaled[idx_bot + 1] >> bit) & 0x01;
+                    uint8_t b2 = (rgb_scaled[idx_bot + 2] >> bit) & 0x01;
+
+                    uint16_t word = addr_mask | BIT_OE;
+
+                    if (r1) word |= BIT_R1;
+                    if (g1) word |= BIT_G1;
+                    if (b1) word |= BIT_B1;
+                    if (r2) word |= BIT_R2;
+                    if (g2) word |= BIT_G2;
+                    if (b2) word |= BIT_B2;
+
+                    dma_words[w_idx++] = word;
+                }
+
+                dma_words[w_idx++] = addr_mask | BIT_LAT | BIT_OE;
+                dma_words[w_idx++] = addr_mask;
             }
         }
 
@@ -140,4 +162,3 @@ void download_gif(const char *url, const char *filepath, size_t *out_size) {
     gd_close_gif(gif);
     heap_caps_free(gif_data);
 }
-

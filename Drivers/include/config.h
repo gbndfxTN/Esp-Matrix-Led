@@ -1,8 +1,8 @@
 #pragma once
 
-// PIR
-#define PIR_PIN        21
-#define PIR_POLL_MS    1000
+// GPIO
+#define BTN_OTA_PIN    14
+
 
 // HUB75 128x64
 #define HUB75_R1       4
